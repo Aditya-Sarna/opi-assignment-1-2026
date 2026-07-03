@@ -7,7 +7,7 @@ To bridge NVIDIA BlueField DPU support into the unified, vendor-neutral OPI Oper
 
 The master OPI controller implements `reconcile.Reconciler` to process cluster-scoped configs (`DpuOperatorConfig`) under the `config.openshift.io/v1` group. Rather than embedding vendor-specific driver bundles inside the primary reconciler loop, we inject an internal **NVIDIA DPF Translation Sub-Controller** into the execution pipeline right after the finalizer (`config.openshift.io/dpuoperatorconfig-finalizer`) validation gate passes.
 
-Upon identifying a target node possessing an NVIDIA PCIe signature via node labels (`dpu=true`), the adapter acts as an active translation layer. It transforms abstract OPI declarations directly into native, tightly coupled NVIDIA DPF Custom Resources—such as `DPFOperatorConfig`, `DPUSet`, `BFB`, `DPUDeployment`, and `DPUService`—under the native `://nvidia.com` and `://nvidia.com` API groups. The standalone NVIDIA DPF Operator then intercepts these generated resources to execute direct low-level device provisioning, rolling infrastructure updates, security posture enforcement, and Helm-based application scheduling via the DOCA API framework.
+Upon identifying a target node possessing an NVIDIA PCIe signature via node labels (`dpu=true`), the adapter acts as an active translation layer. It transforms abstract OPI declarations directly into native, tightly coupled NVIDIA DPF Custom Resources—such as `DPFOperatorConfig`, `DPUSet`, `BFB`, `DPUDeployment`, and `DPUService`—under the native `operator.doca-platform.nvidia.com` and `provisioning.dpu.nvidia.com` API groups. The standalone NVIDIA DPF Operator then intercepts these generated resources to execute direct low-level device provisioning, rolling infrastructure updates, security posture enforcement, and Helm-based application scheduling via the DOCA API framework.
 
 ```mermaid
 sequenceDiagram
@@ -45,6 +45,7 @@ The table below maps the structural interface translations and environmental dis
 | `utils.NewFilesystemModeDetector` | `spec.overrides.dpuCNIPath` | Directs low-level file path mapping configuration arrays depending on detected filesystem isolation boundaries. |
 | `resolveNriTLSProvider` (TLS Flow) | `DPUServiceCredentialRequest` | Coordinates webhook certificate verification using `openshift` service-ca or native `cert-manager` flows. |
 | `openshift.io/dpu` (SFC Resource Req) | `DPUFlavor` / `DPUDeployment` | Matches exact hardware resource allocation constraints and higher-level application lifecycles. |
+
 | Pipeline Firmware Upgrades | `DPUSet` & `BFB` (`provisioning.dpu.nvidia.com`) | Orchestrates asynchronous, rolling BFB image flashes, taints, and cold-boot power cycle commands (`://nvidia.com`). |
 | Workload Deployment & HBN Fabrics | `DPUService` (`svc.dpu.nvidia.com`) | Manages Helm-based application delivery on the card, populating NVUE BGP startup configurations and `startupYAMLJ2` loopback strings. |
 | Virtual Service Chains & Telemetry | `DPUServiceInterface` & `DPUServiceChain` | Maps virtual interfaces (`interfaceType: service`) and binds virtual switches directly to hardware uplinks (`p0`, `p1`). |

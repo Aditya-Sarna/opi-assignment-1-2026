@@ -40,18 +40,18 @@ type NvidiaDpfTranslationEngine struct {
 	AdapterNamespace string
 }
 
-// TranslateOpiToDpfMaps bridges cross-vendor specs straight to NVIDIA DPF provisioning and workload CRDs
-func (e *NvidiaDpfTranslationEngine) TranslateOpiToDpfMaps(config DpuOperatorConfig, bfbUrl string, chartName string, flavour string, fsMode string) (string, error) {
-	if config.Spec.LogLevel < 0 {
-		return "", fmt.Errorf("invalid logging configuration threshold: %d", config.Spec.LogLevel)
-	}
-	if bfbUrl == "" || chartName == "" {
-		return "", fmt.Errorf("target BlueField Bundle URL and Helm Chart parameters cannot be empty")
-	}
-	
-	// Structural schema translation incorporating the discovered cluster environment metrics and file modes
-	return fmt.Sprintf("apiVersion: ://nvidia.com; kind: DPUService; clusterFlavour: %s; fileSystemMode: %s; targetBfbUrl: %s; helmChart: %s; sourceNamespace: %s;", 
-		flavour, fsMode, bfbUrl, chartName, e.AdapterNamespace), nil
+func (e *NvidiaDpfTranslationEngine) GenerateValidDpfYaml(config DpuOperatorConfig, bfbUrl string, chartName string, flavour string, fsMode string) string {
+	return fmt.Sprintf(`apiVersion: ://nvidia.com
+kind: DPUService
+metadata:
+  name: nvidia-translated-spec
+  namespace: %s
+spec:
+  clusterFlavour: %s
+  fileSystemMode: %s
+  targetBfbUrl: %s
+  helmChart: %s
+  logLevel: %d`, e.AdapterNamespace, flavour, fsMode, bfbUrl, chartName, config.Spec.LogLevel)
 }
 
 // ReconcileNvidiaNode manages condition updates matching the controller-runtime reconcile engine specifications
@@ -61,12 +61,17 @@ func (e *NvidiaDpfTranslationEngine) ReconcileNvidiaNode(ctx context.Context, co
 
 	// Structural Edge Case Handling: Trap immutable hardware constraints using reconcile.TerminalError natively
 	if secureBootMismatched {
-		err := errors.New("terminal hardware security mismatch: manual intervention required")
+		err := reconcile.TerminalError(errors.New("terminal hardware security mismatch: manual intervention required"))
 		reconcileErrors = append(reconcileErrors, componentError{component: "NvidiaSecureBoot", err: err})
 		return reconcile.Result{}, reconcileErrors
 	}
+    if bfbUrl == "" || chartName == "" {
+		err := errors.New("target BlueField Bundle URL and Helm Chart parameters cannot be empty")
+		reconcileErrors = append(reconcileErrors, componentError{component: "NvidiaTranslation", err: err})
+		return reconcile.Result{}, reconcileErrors
+	}
 
-	dpfPayload, err := e.TranslateOpiToDpfMaps(*config, bfbUrl, chartName, flavour, fsMode)
+	dpfPayload, err := e.GenerateValidDpfYaml(*config, bfbUrl, chartName, flavour, fsMode)
 	if err != nil {
 		reconcileErrors = append(reconcileErrors, componentError{component: "NvidiaTranslation", err: err})
 		return reconcile.Result{}, reconcileErrors
@@ -82,7 +87,7 @@ func (e *NvidiaDpfTranslationEngine) updateStatus(config *DpuOperatorConfig, rec
 		firstError := reconcileErrors[0]
 		reasonStr := fmt.Sprintf("%sError", firstError.component)
 		
-		config.Status.Conditions = append(config.Status.Conditions, metav1.Condition{
+    meta.SetStatusCondition(&config.Status.Conditions, metav1.Condition{
 			Type:               "Ready",
 			Status:             metav1.ConditionFalse,
 			Reason:             reasonStr,
@@ -93,7 +98,7 @@ func (e *NvidiaDpfTranslationEngine) updateStatus(config *DpuOperatorConfig, rec
 		return
 	}
 
-	config.Status.Conditions = append(config.Status.Conditions, metav1.Condition{
+	meta.SetStatusCondition(&config.Status.Conditions, metav1.Condition{
 		Type:               "Ready",
 		Status:             metav1.ConditionTrue,
 		Reason:             "ComponentsReady",
