@@ -6,7 +6,9 @@ When local Docker is unavailable, `./scripts/verify-all.sh` records **green inte
 
 ## Workflow
 
-File: `.github/workflows/verify.yml`
+File: `.github/workflows/verify.yml` (relative to this `aditya-sarna/` directory — all submission files live here)
+
+For GitHub Actions on a standalone test repo, check out this folder as the repo root (see [opi-assignment1-ci-proof run 28895446525](https://github.com/Aditya-Sarna/opi-assignment1-ci-proof/actions/runs/28895446525)).
 
 | Job | Command | Proves |
 |---|---|---|

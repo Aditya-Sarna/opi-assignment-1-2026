@@ -6,10 +6,6 @@ on:
   pull_request:
   workflow_dispatch:
 
-defaults:
-  run:
-    working-directory: aditya-sarna
-
 jobs:
   unit-contract:
     runs-on: ubuntu-latest
