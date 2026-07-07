@@ -1,6 +1,6 @@
 # CI validation reference (mentor / reviewer)
 
-**Captured run:** [workflow run 28885043356](https://github.com/Aditya-Sarna/opi-assignment1-ci-proof/actions/runs/28885043356) on test repo [Aditya-Sarna/opi-assignment1-ci-proof](https://github.com/Aditya-Sarna/opi-assignment1-ci-proof) — see `validation_ci_github.log` and `validation_ci_github_summary.md`.
+**Captured run:** [workflow run 28895446525](https://github.com/Aditya-Sarna/opi-assignment1-ci-proof/actions/runs/28895446525) on test repo [Aditya-Sarna/opi-assignment1-ci-proof](https://github.com/Aditya-Sarna/opi-assignment1-ci-proof) — see `validation_ci_github.log` and `validation_ci_github_summary.md`. **5 jobs green** (includes `grpc-vsp`).
 
 When local Docker is unavailable, `./scripts/verify-all.sh` records **green integration + e2e (envtest fallback) + BF-3 contract** in `validation_output.txt`. Full **Kind cluster** proof runs on GitHub Actions Linux runners.
 
