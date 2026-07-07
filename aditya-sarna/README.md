@@ -16,7 +16,7 @@ Explore the proposed architecture visually — bootstrap flow, SFC topology mode
 
 | File | Description |
 |---|---|
-| [`architecture_design.md`](architecture_design.md) | Full architecture proposal, 15 ADRs, sequence diagrams (Mermaid.js), trade-off analysis |
+| [`architecture_design.md`](architecture_design.md) | Full architecture proposal, 16 ADRs, sequence diagrams (Mermaid.js), trade-off analysis |
 | [`llm_transcript.json`](llm_transcript.json) | Exact LLM prompts and responses used during design (`[{"role":...}]` format) |
 | [`feature_skeleton.go`](feature_skeleton.go) | Compilable Go skeleton — VSP adapter, CRD translation, reconciler, state machine |
 
@@ -25,7 +25,6 @@ Explore the proposed architecture visually — bootstrap flow, SFC topology mode
 ## Quick Start
 
 ```bash
-cd aditya-sarna
 chmod +x scripts/*.sh
 ./scripts/verify.sh          # unit + contract + integration (envtest)
 ./scripts/verify-all.sh      # all lanes → validation_output.txt
