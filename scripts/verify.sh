@@ -11,6 +11,11 @@ go vet ./...
 echo "=== go test (unit + contract + BF-3 lane spec) ==="
 CGO_ENABLED=0 go test ./... -count=1 -v
 
+echo "=== coverage (skeleton + gRPC packages) ==="
+CGO_ENABLED=0 go test ./... -coverprofile=coverage.out -count=1
+CGO_ENABLED=0 go tool cover -func=coverage.out | tee coverage_summary.txt
+grep -E '^total:' coverage_summary.txt || true
+
 echo "=== bundle digest resolution ==="
 ./scripts/resolve-bundle-digests.sh
 

@@ -14,6 +14,55 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
+func startLiveGRPCServer(t *testing.T, dpf nvidia.DPFClient, node string, vfs int) (string, func()) {
+	t.Helper()
+	lis, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("listen: %v", err)
+	}
+	plugin := vspgrpc.NewDemoVSP(node, dpf, vfs)
+	srv := &vspgrpc.Server{Plugin: plugin, Node: node}
+	g := grpc.NewServer()
+	vspgrpc.Register(g, srv)
+	go func() {
+		_ = g.Serve(lis)
+	}()
+	cleanup := func() {
+		g.Stop()
+		_ = lis.Close()
+	}
+	return lis.Addr().String(), cleanup
+}
+
+// TestGRPCDaemon_LivePing proves cmd/vspdaemon responds on real TCP (not just in-memory NvidiaVSP).
+func TestGRPCDaemon_LivePing(t *testing.T) {
+	ctx := context.Background()
+	dpf := nvidia.NewInMemoryDPFClient()
+	if err := vspgrpc.SeedDemoCluster(ctx, dpf, vspgrpc.DemoNode); err != nil {
+		t.Fatalf("seed: %v", err)
+	}
+	addr, cleanup := startLiveGRPCServer(t, dpf, vspgrpc.DemoNode, 2)
+	defer cleanup()
+
+	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		t.Fatalf("dial: %v", err)
+	}
+	defer conn.Close()
+
+	lc := pb.NewLifeCycleServiceClient(conn)
+	if _, err := lc.Init(ctx, &pb.InitRequest{DpuIdentifier: "live-ping"}); err != nil {
+		t.Fatalf("Init: %v", err)
+	}
+
+	hb := pb.NewHeartbeatServiceClient(conn)
+	pong, err := hb.Ping(ctx, &pb.PingRequest{Timestamp: time.Now().Unix(), SenderId: "live-ping"})
+	if err != nil || !pong.GetHealthy() {
+		t.Fatalf("Ping = %+v, %v", pong, err)
+	}
+	t.Logf("LivePing OK on %s responder=%s", addr, pong.GetResponderId())
+}
+
 // TestLiveSmoke_TCPRoundTrip starts a real TCP listener (like cmd/vspdaemon) and
 // drives Init / GetDevices / Ping / CreateNF — the reviewer-visible live path.
 func TestLiveSmoke_TCPRoundTrip(t *testing.T) {
@@ -28,23 +77,9 @@ func TestLiveSmoke_TCPRoundTrip(t *testing.T) {
 		t.Fatalf("seed nf: %v", err)
 	}
 
-	lis, err := net.Listen("tcp", "127.0.0.1:0")
-	if err != nil {
-		t.Fatalf("listen: %v", err)
-	}
-	plugin := vspgrpc.NewDemoVSP(node, dpf, 3)
-	srv := &vspgrpc.Server{Plugin: plugin, Node: node}
-	g := grpc.NewServer()
-	vspgrpc.Register(g, srv)
-	go func() {
-		_ = g.Serve(lis)
-	}()
-	t.Cleanup(func() {
-		g.Stop()
-		_ = lis.Close()
-	})
+	addr, cleanup := startLiveGRPCServer(t, dpf, node, 3)
+	t.Cleanup(cleanup)
 
-	addr := lis.Addr().String()
 	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		t.Fatalf("dial: %v", err)

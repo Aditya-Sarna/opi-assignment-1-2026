@@ -1,6 +1,8 @@
 # LLM Transcript → Design Index
 
-Maps `llm_transcript.json` (~250 turns, ~1000 lines) to `architecture_design.md` sections.
+Maps `llm_transcript.json` (~256 turns, ~1280 lines) to `architecture_design.md` sections.
+
+Each turn includes a **`section_ref`** field (e.g. `"§5.2"`, `"§6.3"`, `"REVIEWER.md"`) for machine navigation — regenerate via `python3 scripts/annotate_transcript_sections.py` after transcript edits.
 
 ## Decision flow
 

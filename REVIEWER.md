@@ -12,11 +12,11 @@
 
 | Rubric lane | Evidence | Verified by |
 |---|---|---|
-| LLM-assisted design process | `llm_transcript.json` (~250 turns) + `TRANSCRIPT_INDEX.md` | Structured JSON; indexed to §sections |
+| LLM-assisted design process | `llm_transcript.json` (~256 turns, `section_ref` per turn) + `TRANSCRIPT_INDEX.md` | Structured JSON; indexed to §sections |
 | Architecture depth + trade-offs | `architecture_design.md` — **16 ADRs**, Pattern A–E scoring, §10 failures | Concern matrix **12/12 closed** |
 | OPI/DPF alignment | Real OPI types (`ServiceFunctionChain`, `DpuOperatorConfig`); not invented CRDs | §7, `repo_analysis.md`, §7.6 receipts |
 | NVIDIA DPF reuse | LCM + translator; DPF owns lifecycle; ADR-011 bundle | `config/nvidia/dpf-bundle.yaml` |
-| Bonus skeleton | Behavioral tests + **gRPC daemon** (protobuf stubs) | `./scripts/demo-grpc.sh` |
+| Bonus skeleton | Behavioral tests + **gRPC daemon** (protobuf stubs) | `./scripts/demo-grpc.sh`; **82%** pkg coverage in `coverage_summary.txt` |
 | Validation discipline | Recorded + CI-captured | `validation_output.txt`, `validation_ci_github.log` |
 | Honest scope | Claim boundaries below | No production/GA overclaim |
 
@@ -112,7 +112,8 @@ Kamaji CP loss during active SFC → **dataplane keeps forwarding** (§8.7); new
 | `repo_analysis.md` | Upstream grounding + pinned SHAs |
 | `REVIEWER.md` | This guide |
 | `TRANSCRIPT_INDEX.md` | LLM transcript → design section map |
-| `llm_transcript.json` | LLM-assisted design transcript |
+| `llm_transcript.json` | LLM-assisted design transcript (`section_ref` on each turn) |
+| `coverage.out` + `coverage_summary.txt` | Recorded test coverage (`go test -coverprofile`) |
 | `feature_skeleton.go` + `_test.go` | Structural core + 18 behavioral unit/contract tests |
 | `bf3_lane_test.go` + `e2e_bf3_test.go` | BF-3 hardware lane spec + optional lab gate |
 | `integration_test.go` | envtest reconcile loop (SSA, drift, teardown) |

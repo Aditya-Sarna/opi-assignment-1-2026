@@ -5,7 +5,7 @@ cd "$(dirname "$0")/.."
 export PATH=".tools/go/bin:${PATH}"
 
 echo "=== gRPC VSP contract tests (bufconn) ==="
-CGO_ENABLED=0 go test -count=1 -v ./vspgrpc/... -run 'TestVSPDaemon'
+CGO_ENABLED=0 go test -count=1 -v ./vspgrpc/... -run 'TestVSPDaemon|TestGRPCDaemon_LivePing'
 
 echo ""
 echo "=== gRPC VSP live TCP smoke (in-test daemon on ephemeral port) ==="

@@ -3,6 +3,8 @@
 import json
 import os
 import re
+import subprocess
+import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "llm_transcript.json")
@@ -200,12 +202,17 @@ def main():
         else:
             fixed.append(dict(turn))
 
-    with open(OUT, "w") as f:
+    with open(OUT, "w", encoding="utf-8") as f:
         json.dump(fixed, f, indent=2)
         f.write("\n")
 
-    lines = open(OUT).read().count("\n")
-    print(f"Wrote {OUT}: {len(fixed)} turns, {lines} lines")
+    subprocess.run(
+        [sys.executable, os.path.join(os.path.dirname(__file__), "annotate_transcript_sections.py")],
+        check=True,
+    )
+
+    lines = open(OUT, encoding="utf-8").read().count("\n")
+    print(f"Wrote {OUT}: {len(fixed)} turns (+ stress/section_ref via annotate), {lines} lines")
 
 
 if __name__ == "__main__":
