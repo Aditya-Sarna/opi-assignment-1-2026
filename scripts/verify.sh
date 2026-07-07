@@ -9,7 +9,7 @@ echo "=== go vet ==="
 go vet ./...
 
 echo "=== go test (unit + contract + BF-3 lane spec) ==="
-go test ./... -count=1 -v
+CGO_ENABLED=0 go test ./... -count=1 -v
 
 echo "=== bundle digest resolution ==="
 ./scripts/resolve-bundle-digests.sh
@@ -26,3 +26,4 @@ fi
 echo ""
 echo "ALL CHECKS PASSED"
 echo "Full multi-lane record: ./scripts/verify-all.sh"
+echo "gRPC VSP demo: ./scripts/demo-grpc.sh"

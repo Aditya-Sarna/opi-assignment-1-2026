@@ -7,7 +7,7 @@ cd "$(dirname "$0")/.."
 export PATH=".tools/go/bin:${PATH}"
 
 echo "=== BF-3 lane contract (always) ==="
-go test -run TestBF3LaneSpec_Complete -count=1 -v ./...
+CGO_ENABLED=0 go test -run TestBF3LaneSpec_Complete -count=1 -v .
 
 if [ "${BF3_LAB:-0}" != "1" ]; then
   echo ""
@@ -23,7 +23,7 @@ if [ -z "${KUBECONFIG:-}" ]; then
 fi
 
 echo "=== BF-3 lab: golden SFC apply on real apiserver ==="
-go test -tags bf3 -count=1 -v ./...
+CGO_ENABLED=0 go test -tags bf3 -count=1 -v ./...
 
 echo ""
 echo "BF-3 HARDWARE E2E PASSED (lab gate)"

@@ -32,6 +32,10 @@ HW="validation_hardware_e2e.txt"
   ./scripts/e2e-bf3-hardware.sh
 
   echo ""
+  echo "=== Phase 5: gRPC VSP daemon contract ==="
+  ./scripts/demo-grpc.sh
+
+  echo ""
   echo "ALL LANES PASSED"
 } 2>&1 | tee "$OUT"
 

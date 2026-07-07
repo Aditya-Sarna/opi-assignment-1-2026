@@ -40,11 +40,12 @@ Maps `llm_transcript.json` (~250 turns, ~1000 lines) to `architecture_design.md`
 | repo_analysis O-2/O-3 | Joint attach proof | Mode A declarative | repo_analysis.md |
 | Skeleton + tests | stdlib fake rationale | 17 tests + golden | §17, validation_output.txt |
 | UNAVAILABLE test explain | Goroutine Ready simulate | ADR-004 proof | feature_skeleton_test.go |
-| Hardening | Modes, proto, CI | 15 ADRs, 12/12 matrix | §18 |
+| Hardening | Modes, proto, CI | 16 ADRs, 12/12 matrix | §18 |
 | Integration lane | envtest vs unit tests | integration_test.go, CRDs | §14 |
 | Kind e2e | Proof without hardware | e2e_kind_test.go, e2e-kind.sh | §13.1 |
 | Simulator contract | UI vs golden alignment | sfc-web-chain-contract.json | testdata/simulator |
 | Bundle digests | REPLACE placeholders | dpf-bundle.yaml pins | ADR-011 |
 | Transcript tone | Questioning process evidence | am I right / not sure | llm_transcript.json |
+| v1.8 seal | Scorecard, demo, DPUDeployment | REVIEWER.md, ADR-016 | scripts/demo.sh |
 | v1.7 lanes | Integration + Kind + BF-3 | verify-all, CI workflow | validation_output.txt |
 | Submission | Bundle list (no .generated) | Deliverables | REVIEWER.md |

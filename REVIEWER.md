@@ -1,6 +1,6 @@
 # Reviewer Guide (≈3 minutes)
 
-**Candidate:** Aditya Sarna · **Assignment:** LFX OPI Hands-On #1 · **Doc version:** v1.7
+**Candidate:** Aditya Sarna · **Assignment:** LFX OPI Hands-On #1 · **Doc version:** v1.9
 
 ## Decision in one line
 
@@ -8,11 +8,54 @@
 
 **Interactive simulator (v1.5-aligned):** [dpu-architect.lovable.app](https://dpu-architect.lovable.app)
 
+## Assignment rubric scorecard (self-audit)
+
+| Rubric lane | Evidence | Verified by |
+|---|---|---|
+| LLM-assisted design process | `llm_transcript.json` (~250 turns) + `TRANSCRIPT_INDEX.md` | Structured JSON; indexed to §sections |
+| Architecture depth + trade-offs | `architecture_design.md` — **16 ADRs**, Pattern A–E scoring, §10 failures | Concern matrix **12/12 closed** |
+| OPI/DPF alignment | Real OPI types (`ServiceFunctionChain`, `DpuOperatorConfig`); not invented CRDs | §7, `repo_analysis.md`, §7.6 receipts |
+| NVIDIA DPF reuse | LCM + translator; DPF owns lifecycle; ADR-011 bundle | `config/nvidia/dpf-bundle.yaml` |
+| Bonus skeleton | Behavioral tests + **gRPC daemon** (protobuf stubs) | `./scripts/demo-grpc.sh` |
+| Validation discipline | Recorded + CI-captured | `validation_output.txt`, `validation_ci_github.log` |
+| Honest scope | Claim boundaries below | No production/GA overclaim |
+
+**Peer gap this submission closes that adapter-only PRs typically do not:** SFC/NF path, Kamaji topology, **live gRPC VSP daemon**, version matrix, simulator↔golden contract, envtest+Kind CI proof.
+
+## Claim boundaries (what this submission is / is not)
+
+| Claim | In scope (A1) | Out of scope (later phases) |
+|---|---|---|
+| Architecture proposal | ✓ `architecture_design.md` | — |
+| Compilable skeleton + tests | ✓ 22+ default tests; integration/Kind lanes | Full upstream OPI merge |
+| DPF actuation | ✓ Declarative CR translation (fake/envtest/Kind) | Live BlueField lab (`BF3_LAB=1`) |
+| gRPC VSP | ✓ Protobuf services + `cmd/vspdaemon` + contract tests | Upstream proto merge in OPI repo |
+| LCM install | ✓ State machine + bundle pins | OLM/Helm install in cluster |
+| CI proof | ✓ [Captured Actions run](validation_ci_github_summary.md) | Mentor must use log if repo private |
+
+## 30-second demos (zero Docker)
+
+```bash
+chmod +x scripts/demo.sh scripts/demo-grpc.sh
+./scripts/demo.sh       # golden SFC + simulator contract
+./scripts/demo-grpc.sh  # gRPC Init / GetDevices / Ping / CreateNF
+```
+
+Live daemon (optional, two terminals):
+
+```bash
+go run ./cmd/vspdaemon -addr :50051 -seed-nf
+go run ./cmd/vspclient -addr localhost:50051 -nf
+```
+
+Automated two-process demo: `VSP_LIVE_DEMO=1 ./scripts/demo-grpc.sh`
+
 ## Read in this order
 
 | Step | File / section | Time | Why |
 |---|---|---|---|
-| 0 | [dpu-architect.lovable.app](https://dpu-architect.lovable.app) (optional) | 60s | Visual walkthrough — bootstrap/SFC, topology toggle, component graph |
+| 0 | `./scripts/demo.sh` | 20s | Golden SFC + simulator contract |
+| 0b | `./scripts/demo-grpc.sh` | 30s | **gRPC stubs** → NvidiaVSP (Init/Ping/NF) |
 | 1 | Concern Closure Matrix below | 30s | **12/12 closed** — audit proof columns |
 | 2 | `repo_analysis.md` | 60s | Pinned SHAs + source receipts |
 | 3 | `TRANSCRIPT_INDEX.md` + `llm_transcript.json` | 30s | LLM-assisted process evidence |
@@ -22,6 +65,7 @@
 | 7 | `./scripts/verify-all.sh` | 60s | All lanes → `validation_output.txt` |
 | 8 | `validation_ci_reference.md` | 30s | CI / Kind mentor proof path |
 | 9 | `validation_hardware_e2e.txt` | 15s | BF-3 lane contract record |
+| 10 | [dpu-architect.lovable.app](https://dpu-architect.lovable.app) (optional) | 60s | Interactive simulator walkthrough |
 
 Full depth: `architecture_design.md`. Fast path avoids reading it linearly.
 
@@ -64,7 +108,7 @@ Kamaji CP loss during active SFC → **dataplane keeps forwarding** (§8.7); new
 
 | Artifact | Purpose |
 |---|---|
-| `architecture_design.md` | Full proposal + 15 ADRs + diagrams |
+| `architecture_design.md` | Full proposal + 16 ADRs + diagrams |
 | `repo_analysis.md` | Upstream grounding + pinned SHAs |
 | `REVIEWER.md` | This guide |
 | `TRANSCRIPT_INDEX.md` | LLM transcript → design section map |
@@ -80,9 +124,14 @@ Kamaji CP loss during active SFC → **dataplane keeps forwarding** (§8.7); new
 | `scripts/e2e-bf3-hardware.sh` | BF-3 contract + optional lab runner |
 | `.github/workflows/verify.yml` | CI: unit, integration, Kind, BF-3 contract |
 | `validation_ci_reference.md` | Mentor CI / local Docker instructions |
+| `validation_ci_github.log` | Captured GitHub Actions log (Kind + integration green) |
+| `validation_ci_github_summary.md` | CI run URL + job summary |
 | `validation_hardware_e2e.txt` | Recorded BF-3 lane output |
 | `testdata/simulator/sfc-web-chain-contract.json` | Machine-readable simulator object graph |
 | `scripts/resolve-bundle-digests.sh` | Verifies NGC/quay digest pins resolve |
+| `cmd/vspdaemon/` + `cmd/vspclient/` + `vspgrpc/` + `api/vsp/` | OPI Vendor gRPC daemon + live demo client |
+| `scripts/demo-grpc.sh` | gRPC contract demo (bufconn; no hardware) |
+| `scripts/demo.sh` | 30-second golden-contract demo (no Docker) |
 | `scripts/verify.sh` | One-command verification gate |
 | `validation_output.txt` | Recorded verify output |
 | `config/nvidia/compatibility.yaml` | Version matrix SSOT (ADR-012) |

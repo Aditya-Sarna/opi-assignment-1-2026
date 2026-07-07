@@ -59,3 +59,15 @@ jobs:
         run: |
           chmod +x scripts/*.sh
           ./scripts/e2e-bf3-hardware.sh
+
+  grpc-vsp:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+      - name: gRPC VSP daemon contract
+        run: |
+          chmod +x scripts/*.sh
+          ./scripts/demo-grpc.sh

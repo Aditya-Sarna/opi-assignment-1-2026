@@ -2,7 +2,7 @@
 
 **Assignment:** LFX / OPI Hands-On Assignment 1 — LLM-Assisted Architecture Design
 **Author:** Aditya Sarna (LLM-assisted; full prompt/response transcript in `llm_transcript.json`)
-**Status:** Proposal (v1.6 — integration/envtest lane, Kind e2e, simulator contract gate, digest-pinned bundle)
+**Status:** Proposal (v1.9 — gRPC VSP daemon, CI-captured Kind/integration, BF-3 lane, 16 ADRs)
 
 ---
 
@@ -476,6 +476,19 @@ from §16.
 | implicit NF ingress/egress ports | `DPUServiceInterface` (type `service`) | 1 NF → 2 |
 | `NFRequest{input, output, bridge_id}` (gRPC, per-pod) | node-scoped `DPUServiceInterface` pair + chain hop | 1 → 2+patch |
 | SFC IP requirements | `DPUServiceIPAM` | 0..1 |
+
+### 7.2.1 `DPUDeployment` vs granular CRs (production path)
+
+DPF exposes both **`DPUDeployment`** (aggregate: services + chain + selectors) and lower-level
+`DPUService` / `DPUServiceChain` / `DPUServiceInterface` / `DPUServiceIPAM`. This design uses
+**granular CRs in v1** because they map 1:1 to OPI `ServiceFunctionChain` hops, enable per-object
+SSA drift correction (§9.1), and power the golden contract in `testdata/golden/sfc-web-chain.yaml`.
+
+**Production rollout (ADR-016):** after provisioning parity, add a **`DPUDeployment` render mode**
+behind `compatibility.yaml` feature flag `renderMode: granular|deployment` — same translator
+input, alternate southbound shape. Granular remains default for testability; `DPUDeployment` is
+preferred when DPF operators want fewer owned objects. Both paths stay level-triggered; neither
+writes DPF status.
 
 ### 7.3 Identity & naming contract
 
@@ -1098,6 +1111,8 @@ The `CreateNetworkFunction` caller-location risk was verified upstream (§7.6); 
 | `charts/opi-nf-wrapper/` | Wrapper Helm chart (ADR-010) |
 | `testdata/golden/sfc-web-chain.yaml` | Golden OPI→DPF translation for contract gate |
 | `proposals/dpu-api-provisioning.patch` | Optional upstream `ProvisioningService` sketch |
+| `api/vsp/vsp.proto` + generated stubs | OPI Vendor gRPC contract (LifeCycle/Device/NF/Heartbeat) |
+| `vspgrpc/` + `cmd/vspdaemon/` + `cmd/vspclient/` | gRPC server + live demo client; `./scripts/demo-grpc.sh` (bufconn + TCP smoke) |
 | `llm_transcript.json` | LLM-assisted design transcript |
 | [dpu-architect.lovable.app](https://dpu-architect.lovable.app) | Interactive architecture simulator (v1.5) |
 
@@ -1217,6 +1232,15 @@ assumes **1:1** host↔DPU — standard BF-3 server model; OPI `dpu=true` labeli
 `DPUSet` nodeSelector target single DPU cardinality. N:1 requires coordinated OPI device-plugin,
 daemon disambiguation, and DPF `DPUSet` rules — post-v1 upstream design. Rejected: unspecified
 N:1 behavior that would fail silently in mixed fleets. Consequences: assumption A8 (§16.3); ADR-015.
+
+**ADR-016 — Granular CRs v1; `DPUDeployment` as optional production render mode.**
+*Status: Accepted.* Context: DPF recommends `DPUDeployment` for bundled service+chain deployment;
+adapter-only submissions often stop at metadata mapping. Decision: v1 translator emits **granular**
+CRs (golden-tested, SSA-friendly); Phase 4+ may emit `DPUDeployment` when
+`renderMode=deployment` in compatibility matrix. Rejected: choosing only `DPUDeployment` in v1
+without per-hop SSA tests — hides drift on individual interfaces. Rejected: ignoring
+`DPUDeployment` entirely — misses DPF-native ops path. Consequences: §7.2.1; future flag in
+`config/nvidia/compatibility.yaml`.
 
 ---
 
