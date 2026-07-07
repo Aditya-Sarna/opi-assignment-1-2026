@@ -50,7 +50,8 @@ echo "=== Installing DPF + OPI stand-in CRDs ==="
 kubectl apply -f testdata/crds/
 
 export KUBECONFIG
-KUBECONFIG="$(kind get kubeconfig --name "$CLUSTER")"
+KUBECONFIG="$(mktemp)"
+kind get kubeconfig --name "$CLUSTER" > "$KUBECONFIG"
 export KUBECONFIG
 
 echo "=== go test -tags e2e ==="
